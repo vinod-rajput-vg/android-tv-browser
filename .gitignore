@@ -6,3 +6,4 @@ build/
 *.aar
 .DS_Store
 local.properties
+release-key.jks
