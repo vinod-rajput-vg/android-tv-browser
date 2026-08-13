@@ -2,7 +2,6 @@ package com.tvbrowser
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.PreferenceFragmentCompat
 import com.tvbrowser.settings.SettingsFragment
 
 class SettingsActivity : AppCompatActivity() {
@@ -15,11 +14,5 @@ class SettingsActivity : AppCompatActivity() {
                 .replace(R.id.settings_container, SettingsFragment())
                 .commit()
         }
-    }
-}
-
-class SettingsFragment : PreferenceFragmentCompat() {
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.preferences, rootKey)
     }
 }

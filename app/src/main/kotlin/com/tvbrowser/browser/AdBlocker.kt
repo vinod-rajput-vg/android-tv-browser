@@ -106,7 +106,7 @@ class AdBlocker(private val context: Context) {
                 if (window.XMLHttpRequest) {
                     const originalOpen = XMLHttpRequest.prototype.open;
                     XMLHttpRequest.prototype.open = function(method, url, ...args) {
-                        if (this.shouldBlockUrl && this.shouldBlockUrl(url)) {
+                        if (Android && Android.shouldBlockUrl && Android.shouldBlockUrl(url)) {
                             console.log('Blocked ad request: ' + url);
                             return;
                         }
@@ -118,7 +118,7 @@ class AdBlocker(private val context: Context) {
     }
 
     @JavascriptInterface
-    fun shouldBlockUrl(url: String): Boolean {
+    fun checkIfAdUrl(url: String): Boolean {
         return shouldBlockUrl(url)
     }
 }
