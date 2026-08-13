@@ -10,6 +10,10 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.view.KeyEvent
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
+import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.widget.EditText
 import android.widget.ImageButton
@@ -37,12 +41,15 @@ class MainActivity : AppCompatActivity() {
     private var pcModeAtLastSetup = false
     private var textSizeAtLastSetup = 100
     private var screenSizeAtLastSetup = 100
+    private var customView: View? = null
+    private var customViewCallback: WebChromeClient.CustomViewCallback? = null
     private val voiceRequestCode = 7001
     private val audioPermissionCode = 7002
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        window.addFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED)
         preferencesManager = PreferencesManager(this)
         browserEngine = BrowserEngine(this, preferencesManager)
         initViews()
@@ -65,7 +72,11 @@ class MainActivity : AppCompatActivity() {
     private fun setupWebView() {
         browserEngine.configureWebView(webView)
         webView.webViewClient = browserEngine.createWebViewClient(progressBar) { url -> updateUrlBar(url) }
-        webView.webChromeClient = browserEngine.createWebChromeClient(progressBar)
+        webView.webChromeClient = browserEngine.createWebChromeClient(
+            progressBar,
+            { view, callback -> showFullscreenVideo(view, callback) },
+            { hideFullscreenVideo() }
+        )
         captureSettingsState()
         loadHomePage()
     }
@@ -132,6 +143,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.menu_copy_url -> copyCurrentUrl()
                 R.id.menu_share -> shareCurrentPage()
                 R.id.menu_external_browser -> openExternalBrowser()
+                R.id.menu_exit -> finishAndRemoveTask()
                 else -> return@setOnMenuItemClickListener false
             }
             true
@@ -204,10 +216,53 @@ class MainActivity : AppCompatActivity() {
         }
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.getDefault().toLanguageTag())
             putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_search_prompt))
+            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
         }
-        try { startActivityForResult(intent, voiceRequestCode) }
-        catch (_: ActivityNotFoundException) { Toast.makeText(this, R.string.voice_search_unavailable, Toast.LENGTH_SHORT).show() }
+        try {
+            startActivityForResult(intent, voiceRequestCode)
+        } catch (_: ActivityNotFoundException) {
+            try {
+                startActivityForResult(Intent(RecognizerIntent.ACTION_WEB_SEARCH).apply {
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                }, voiceRequestCode)
+            } catch (_: ActivityNotFoundException) {
+                Toast.makeText(this, R.string.voice_search_unavailable, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showFullscreenVideo(view: View, callback: WebChromeClient.CustomViewCallback) {
+        if (customView != null) {
+            callback.onCustomViewHidden()
+            return
+        }
+        customView = view
+        customViewCallback = callback
+        (window.decorView as ViewGroup).addView(
+            view,
+            ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        )
+        webView.visibility = View.GONE
+        window.decorView.systemUiVisibility = (
+            View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            )
+    }
+
+    private fun hideFullscreenVideo() {
+        val view = customView ?: return
+        (view.parent as? ViewGroup)?.removeView(view)
+        customView = null
+        customViewCallback?.onCustomViewHidden()
+        customViewCallback = null
+        webView.visibility = View.VISIBLE
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
     }
 
     @Deprecated("Legacy TV-compatible activity result API")
@@ -223,6 +278,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openSettings() = startActivity(Intent(this, SettingsActivity::class.java))
+
+    override fun onBackPressed() {
+        if (customView != null) {
+            hideFullscreenVideo()
+        } else if (webView.canGoBack()) {
+            webView.goBack()
+        } else {
+            super.onBackPressed()
+        }
+    }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -242,11 +307,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         webView.onPause()
-        webView.pauseTimers()
         super.onPause()
     }
 
     override fun onDestroy() {
+        if (customView != null) hideFullscreenVideo()
+        webView.stopLoading()
         webView.destroy()
         super.onDestroy()
     }
