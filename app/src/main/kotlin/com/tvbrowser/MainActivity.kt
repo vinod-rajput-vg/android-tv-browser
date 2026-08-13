@@ -3,9 +3,7 @@ package com.tvbrowser
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.View
 import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.webkit.WebView
@@ -21,8 +19,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var preferencesManager: PreferencesManager
     private lateinit var btnBack: ImageButton
     private lateinit var btnForward: ImageButton
-    private lateinit var btnSettings: ImageButton
     private lateinit var btnHome: ImageButton
+    private lateinit var btnRefresh: ImageButton
+    private lateinit var btnSettings: ImageButton
     private var pcModeAtLastSetup = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,13 +42,16 @@ class MainActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressBar)
         btnBack = findViewById(R.id.btnBack)
         btnForward = findViewById(R.id.btnForward)
-        btnSettings = findViewById(R.id.btnSettings)
         btnHome = findViewById(R.id.btnHome)
+        btnRefresh = findViewById(R.id.btnRefresh)
+        btnSettings = findViewById(R.id.btnSettings)
     }
 
     private fun setupWebView() {
         browserEngine.configureWebView(webView)
-        webView.webViewClient = browserEngine.createWebViewClient(progressBar)
+        webView.webViewClient = browserEngine.createWebViewClient(progressBar) { url ->
+            updateUrlBar(url)
+        }
         webView.webChromeClient = browserEngine.createWebChromeClient(progressBar)
         pcModeAtLastSetup = preferencesManager.isPcModeEnabled()
         loadHomePage()
@@ -64,24 +66,43 @@ class MainActivity : AppCompatActivity() {
             false
         }
 
-        btnBack.setOnClickListener { webView.goBack() }
-        btnForward.setOnClickListener { webView.goForward() }
-        btnSettings.setOnClickListener { openSettings() }
+        btnBack.setOnClickListener {
+            if (webView.canGoBack()) webView.goBack()
+        }
+
+        btnForward.setOnClickListener {
+            if (webView.canGoForward()) webView.goForward()
+        }
+
         btnHome.setOnClickListener { loadHomePage() }
+        btnRefresh.setOnClickListener { webView.reload() }
+        btnSettings.setOnClickListener { openSettings() }
     }
 
     private fun navigateToUrl(url: String) {
-        var finalUrl = url.trim()
-        if (!finalUrl.startsWith("http://") && !finalUrl.startsWith("https://")) {
-            finalUrl = "https://$finalUrl"
+        val input = url.trim()
+        if (input.isEmpty()) return
+
+        val finalUrl = when {
+            input.startsWith("http://") || input.startsWith("https://") -> input
+            input.contains(".") && !input.contains(" ") -> "https://$input"
+            else -> "https://www.google.com/search?q=${android.net.Uri.encode(input)}"
         }
+
         webView.loadUrl(finalUrl)
     }
 
     private fun loadHomePage() {
         val homePage = preferencesManager.getHomePage()
         webView.loadUrl(homePage)
-        urlBar.setText(homePage)
+    }
+
+    private fun updateUrlBar(url: String?) {
+        if (url.isNullOrBlank()) return
+        if (urlBar.text.toString() != url) {
+            urlBar.setText(url)
+            urlBar.setSelection(urlBar.text.length)
+        }
     }
 
     private fun openSettings() {
@@ -100,6 +121,8 @@ class MainActivity : AppCompatActivity() {
             pcModeAtLastSetup = pcModeEnabled
             webView.loadUrl(currentUrl)
         }
+
+        updateUrlBar(webView.url)
     }
 
     override fun onPause() {
