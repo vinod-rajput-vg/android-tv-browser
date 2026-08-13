@@ -51,8 +51,15 @@ jobs:
           else
             APK_PATH="app/build/outputs/apk/release/app-release.apk"
           fi
-          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
-          echo "apk_name=$(basename $APK_PATH)" >> $GITHUB_OUTPUT
+
+          if [ ! -f "$APK_PATH" ]; then
+            echo "APK not found: $APK_PATH"
+            exit 1
+          fi
+
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+          echo "apk_name=$(basename "$APK_PATH")" >> "$GITHUB_OUTPUT"
+          ls -lh "$APK_PATH"
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
@@ -63,15 +70,20 @@ jobs:
 
       - name: Create GitHub Release
         if: inputs.build_type == 'release'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.0-build.${{ github.run_number }}
           name: TV Browser Release v1.0.0-build.${{ github.run_number }}
-          files: ${{ steps.apk.outputs.apk_path }}
+          files: |
+            ${{ steps.apk.outputs.apk_path }}
           body: |
             ## 📦 Android TV Browser - Release Build
             Build #${{ github.run_number }}
+
+            ### APK
+            `app-release.apk` is attached below.
           draft: false
           prerelease: false
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
