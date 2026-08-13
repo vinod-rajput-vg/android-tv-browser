@@ -26,6 +26,8 @@
     <string name="text_size_summary">Adjust text size percentage</string>
     <string name="javascript_enabled">Enable JavaScript</string>
     <string name="javascript_summary">Allow websites to run scripts</string>
+    <string name="pc_mode">PC Mode</string>
+    <string name="pc_mode_summary">Use desktop website versions with a PC browser user agent</string>
 
     <!-- Privacy -->
     <string name="privacy">Privacy</string>
