@@ -51,6 +51,12 @@
             android:title="@string/javascript_enabled"
             android:summary="@string/javascript_summary"
             android:defaultValue="true" />
+
+        <SwitchPreference
+            android:key="pc_mode_enabled"
+            android:title="@string/pc_mode"
+            android:summary="@string/pc_mode_summary"
+            android:defaultValue="false" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/privacy">
