@@ -16,10 +16,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindPercentSummaries() {
-        val textSize = findPreference<SeekBarPreference>("text_size")
-        val screenSize = findPreference<SeekBarPreference>("screen_size")
-
-        textSize?.apply {
+        findPreference<SeekBarPreference>("text_size")?.apply {
             value = preferencesManager.getTextSize()
             summary = getString(R.string.text_size_current, value)
             setOnPreferenceChangeListener { _, newValue ->
@@ -30,7 +27,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
-        screenSize?.apply {
+        findPreference<SeekBarPreference>("screen_size")?.apply {
             value = preferencesManager.getScreenSize()
             summary = getString(R.string.screen_size_current, value)
             setOnPreferenceChangeListener { _, newValue ->
@@ -41,12 +38,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
-        findPreference<Preference>("pc_mode_enabled")?.summaryProvider = Preference.SummaryProvider { preference ->
-            if ((preference as androidx.preference.SwitchPreferenceCompat).isChecked) {
+        findPreference<Preference>("pc_mode_enabled")?.setOnPreferenceChangeListener { preference, newValue ->
+            preference.summary = if (newValue as Boolean) {
                 getString(R.string.pc_mode_enabled_summary)
             } else {
                 getString(R.string.pc_mode_summary)
             }
+            true
         }
     }
 }
