@@ -30,6 +30,9 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Grant execute permission to gradlew
+        run: chmod +x ./gradlew
+
       - name: Build ${{ inputs.build_type }} APK
         run: |
           if [ "${{ inputs.build_type }}" = "release" ]; then
