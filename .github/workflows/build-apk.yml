@@ -30,11 +30,13 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-
       - name: Build ${{ inputs.build_type }} APK
-        run: ./gradlew assemble${{ inputs.build_type == 'debug' && 'Debug' || 'Release' }}
+        run: |
+          if [ "${{ inputs.build_type }}" = "release" ]; then
+            ./gradlew assembleRelease
+          else
+            ./gradlew assembleDebug
+          fi
 
       - name: Find APK
         id: apk
@@ -66,7 +68,6 @@ jobs:
             
             **Build Information:**
             - Build Number: `${{ github.run_number }}`
-            - Build Type: Release
             - Commit: `${{ github.sha }}`
             
             **Features:**
