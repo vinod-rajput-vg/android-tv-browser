@@ -30,23 +30,16 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Download gradle-wrapper.jar if missing
-        run: |
-          mkdir -p gradle/wrapper
-          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            echo "Downloading gradle-wrapper.jar..."
-            curl -L -o gradle/wrapper/gradle-wrapper.jar https://services.gradle.org/distributions/gradle-8.4-wrapper.jar
-            ls -lh gradle/wrapper/gradle-wrapper.jar
-          fi
-
       - name: Grant execute permission to gradlew
         run: chmod +x ./gradlew
 
       - name: Build ${{ inputs.build_type }} APK
         run: |
           if [ "${{ inputs.build_type }}" = "release" ]; then
+            ./gradlew --version
             ./gradlew assembleRelease
           else
+            ./gradlew --version
             ./gradlew assembleDebug
           fi
 
@@ -77,23 +70,8 @@ jobs:
           files: ${{ steps.apk.outputs.apk_path }}
           body: |
             ## 📦 Android TV Browser - Release Build
-            
-            **Build Information:**
-            - Build Number: `${{ github.run_number }}`
-            - Commit: `${{ github.sha }}`
-            
-            **Features:**
-            ✅ YouTube Ad Blocker
-            ✅ Multi-layer Ad Blocking
-            ✅ Full Settings Control
-            ✅ TV-Optimized UI
+            Build #${{ github.run_number }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build Summary
-        run: |
-          echo "✅ Build Complete!"
-          echo "📦 APK: ${{ steps.apk.outputs.apk_name }}"
-          echo "🔗 Download from Artifacts or Releases tab"
