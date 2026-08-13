@@ -1,26 +1,27 @@
 package com.tvbrowser
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.view.KeyEvent
-import android.view.Menu
-import android.view.MenuItem
+import android.webkit.WebView
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.PopupMenu
 import android.widget.ProgressBar
-import android.webkit.WebView
+import android.widget.Toast
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.tvbrowser.R
 import com.tvbrowser.browser.BrowserEngine
 import com.tvbrowser.settings.PreferencesManager
-import android.widget.Toast
-import android.content.ActivityNotFoundException
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -41,10 +42,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         preferencesManager = PreferencesManager(this)
         browserEngine = BrowserEngine(this, preferencesManager)
-
         initViews()
         setupListeners()
         setupWebView()
@@ -78,7 +77,6 @@ class MainActivity : AppCompatActivity() {
             }
             false
         }
-
         btnBack.setOnClickListener { if (webView.canGoBack()) webView.goBack() }
         btnForward.setOnClickListener { if (webView.canGoForward()) webView.goForward() }
         btnHome.setOnClickListener { loadHomePage() }
@@ -87,8 +85,8 @@ class MainActivity : AppCompatActivity() {
         btnMenu.setOnClickListener { showBrowserMenu() }
     }
 
-    private fun navigateToUrl(url: String) {
-        val input = url.trim()
+    private fun navigateToUrl(inputValue: String) {
+        val input = inputValue.trim()
         if (input.isEmpty()) return
         val finalUrl = when {
             input.startsWith("http://") || input.startsWith("https://") -> input
@@ -114,7 +112,6 @@ class MainActivity : AppCompatActivity() {
         val popup = PopupMenu(this, btnMenu)
         popup.menuInflater.inflate(R.menu.browser_menu, popup.menu)
         popup.menu.findItem(R.id.menu_pc_mode).isChecked = preferencesManager.isPcModeEnabled()
-
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.menu_settings -> openSettings()
@@ -123,11 +120,12 @@ class MainActivity : AppCompatActivity() {
                 R.id.menu_pc_mode -> {
                     val enabled = !preferencesManager.isPcModeEnabled()
                     preferencesManager.setPcModeEnabled(enabled)
-                    item.isChecked = enabled
                     reloadWithCurrentSettings()
                 }
                 R.id.menu_text_zoom_in -> changeTextZoom(10)
                 R.id.menu_text_zoom_out -> changeTextZoom(-10)
+                R.id.menu_find_in_page -> webView.showFindDialog(null, true)
+                R.id.menu_copy_url -> copyCurrentUrl()
                 R.id.menu_share -> shareCurrentPage()
                 R.id.menu_external_browser -> openExternalBrowser()
                 else -> return@setOnMenuItemClickListener false
@@ -148,16 +146,15 @@ class MainActivity : AppCompatActivity() {
         val url = webView.url ?: return
         val title = webView.title?.takeIf { it.isNotBlank() } ?: url
         preferencesManager.addBookmark(title, url)
-        Toast.makeText(this, getString(R.string.bookmark_added), Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, R.string.bookmark_added, Toast.LENGTH_SHORT).show()
     }
 
     private fun showBookmarks() {
         val bookmarks = preferencesManager.getBookmarks()
         if (bookmarks.isEmpty()) {
-            Toast.makeText(this, getString(R.string.no_bookmarks), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.no_bookmarks, Toast.LENGTH_SHORT).show()
             return
         }
-
         val labels = bookmarks.map { "${it.first}\n${it.second}" }.toTypedArray()
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle(R.string.bookmarks)
@@ -167,9 +164,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun changeTextZoom(delta: Int) {
-        val next = (webView.settings.textZoom + delta).coerceIn(25, 200)
+        val next = (webView.settings.textZoom + delta).coerceIn(50, 200)
         webView.settings.textZoom = next
         preferencesManager.setTextSize(next)
+    }
+
+    private fun copyCurrentUrl() {
+        val url = webView.url ?: return
+        val clipboard = getSystemService(ClipboardManager::class.java)
+        clipboard.setPrimaryClip(ClipData.newPlainText("URL", url))
+        Toast.makeText(this, R.string.url_copied, Toast.LENGTH_SHORT).show()
     }
 
     private fun shareCurrentPage() {
@@ -205,10 +209,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @Deprecated("Android activity result API retained for TV/legacy compatibility")
+    @Deprecated("Legacy TV-compatible activity result API")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == voiceRequestCode && resultCode == RESULT_OK) {
+        if (requestCode == voiceRequestCode && resultCode == Activity.RESULT_OK) {
             val result = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
             if (!result.isNullOrBlank()) {
                 urlBar.setText(result)
@@ -223,18 +227,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == audioPermissionCode && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
-            startVoiceSearch()
-        }
+        if (requestCode == audioPermissionCode && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) startVoiceSearch()
     }
 
     override fun onResume() {
         super.onResume()
         webView.onResume()
         webView.resumeTimers()
-
-        val pcModeEnabled = preferencesManager.isPcModeEnabled()
-        if (pcModeEnabled != pcModeAtLastSetup) reloadWithCurrentSettings()
+        if (preferencesManager.isPcModeEnabled() != pcModeAtLastSetup) reloadWithCurrentSettings()
         updateUrlBar(webView.url)
     }
 
