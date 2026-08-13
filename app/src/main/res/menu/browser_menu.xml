@@ -1,33 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:id="@+id/menu_settings"
-        android:title="@string/settings"
-        android:icon="@drawable/ic_settings" />
-    <item
-        android:id="@+id/menu_bookmarks"
-        android:title="@string/bookmarks"
-        android:icon="@drawable/ic_bookmark" />
-    <item
-        android:id="@+id/menu_add_bookmark"
-        android:title="@string/add_bookmark"
-        android:icon="@drawable/ic_bookmark_add" />
-    <item
-        android:id="@+id/menu_pc_mode"
-        android:title="@string/pc_mode"
-        android:checkable="true"
-        android:icon="@drawable/ic_desktop" />
-    <item
-        android:id="@+id/menu_text_zoom_in"
-        android:title="@string/text_zoom_in" />
-    <item
-        android:id="@+id/menu_text_zoom_out"
-        android:title="@string/text_zoom_out" />
-    <item
-        android:id="@+id/menu_share"
-        android:title="@string/share_page"
-        android:icon="@drawable/ic_share" />
-    <item
-        android:id="@+id/menu_external_browser"
-        android:title="@string/open_external" />
+    <item android:id="@+id/menu_settings" android:title="@string/settings" android:icon="@drawable/ic_settings" />
+    <item android:id="@+id/menu_bookmarks" android:title="@string/bookmarks" android:icon="@drawable/ic_bookmark" />
+    <item android:id="@+id/menu_add_bookmark" android:title="@string/add_bookmark" android:icon="@drawable/ic_bookmark_add" />
+    <item android:id="@+id/menu_pc_mode" android:title="@string/pc_mode" android:checkable="true" android:icon="@drawable/ic_desktop" />
+    <item android:id="@+id/menu_find_in_page" android:title="@string/find_in_page" />
+    <item android:id="@+id/menu_copy_url" android:title="@string/copy_url" />
+    <item android:id="@+id/menu_text_zoom_in" android:title="@string/text_zoom_in" />
+    <item android:id="@+id/menu_text_zoom_out" android:title="@string/text_zoom_out" />
+    <item android:id="@+id/menu_share" android:title="@string/share_page" android:icon="@drawable/ic_share" />
+    <item android:id="@+id/menu_external_browser" android:title="@string/open_external" />
 </menu>
