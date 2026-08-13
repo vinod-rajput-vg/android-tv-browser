@@ -3,88 +3,28 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory android:title="@string/ad_blocking">
-        <SwitchPreference
-            android:key="ad_blocker_enabled"
-            android:title="@string/enable_ad_blocker"
-            android:summary="@string/block_ads_summary"
-            android:defaultValue="true" />
-
-        <SwitchPreference
-            android:key="yt_ad_blocker_enabled"
-            android:title="@string/enable_yt_blocker"
-            android:summary="@string/block_yt_ads_summary"
-            android:defaultValue="true"
-            android:dependency="ad_blocker_enabled" />
-
-        <SwitchPreference
-            android:key="block_tracking_enabled"
-            android:title="@string/block_tracking"
-            android:summary="@string/block_tracking_summary"
-            android:defaultValue="true"
-            android:dependency="ad_blocker_enabled" />
-
-        <SwitchPreference
-            android:key="block_scripts_enabled"
-            android:title="@string/block_scripts"
-            android:summary="@string/block_scripts_summary"
-            android:defaultValue="false"
-            android:dependency="ad_blocker_enabled" />
+        <SwitchPreference android:key="ad_blocker_enabled" android:title="@string/enable_ad_blocker" android:summary="@string/block_ads_summary" android:defaultValue="true" android:icon="@drawable/ic_shield" />
+        <SwitchPreference android:key="yt_ad_blocker_enabled" android:title="@string/enable_yt_blocker" android:summary="@string/block_yt_ads_summary" android:defaultValue="true" android:dependency="ad_blocker_enabled" android:icon="@drawable/ic_play" />
+        <SwitchPreference android:key="block_tracking_enabled" android:title="@string/block_tracking" android:summary="@string/block_tracking_summary" android:defaultValue="true" android:dependency="ad_blocker_enabled" android:icon="@drawable/ic_privacy" />
+        <SwitchPreference android:key="block_scripts_enabled" android:title="@string/block_scripts" android:summary="@string/block_scripts_summary" android:defaultValue="false" android:dependency="ad_blocker_enabled" android:icon="@drawable/ic_code" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/browser_settings">
-        <EditTextPreference
-            android:key="home_page"
-            android:title="@string/home_page"
-            android:summary="@string/home_page_summary"
-            android:defaultValue="https://www.google.com" />
-
-        <SeekBarPreference
-            android:key="text_size"
-            android:title="@string/text_size"
-            android:summary="@string/text_size_summary"
-            android:defaultValue="100"
-            android:min="50"
-            android:max="200" />
-
-        <SwitchPreference
-            android:key="javascript_enabled"
-            android:title="@string/javascript_enabled"
-            android:summary="@string/javascript_summary"
-            android:defaultValue="true" />
-
-        <SwitchPreference
-            android:key="pc_mode_enabled"
-            android:title="@string/pc_mode"
-            android:summary="@string/pc_mode_summary"
-            android:defaultValue="false" />
+        <EditTextPreference android:key="home_page" android:title="@string/home_page" android:summary="@string/home_page_summary" android:defaultValue="https://www.google.com" android:icon="@drawable/ic_home" />
+        <SeekBarPreference android:key="text_size" android:title="@string/text_size" android:summary="@string/text_size_summary" android:defaultValue="100" android:min="50" android:max="200" android:icon="@drawable/ic_text_size" />
+        <SeekBarPreference android:key="screen_size" android:title="@string/screen_size" android:summary="@string/screen_size_summary" android:defaultValue="100" android:min="25" android:max="100" android:icon="@drawable/ic_screen" />
+        <SwitchPreference android:key="javascript_enabled" android:title="@string/javascript_enabled" android:summary="@string/javascript_summary" android:defaultValue="true" android:icon="@drawable/ic_code" />
+        <SwitchPreference android:key="pc_mode_enabled" android:title="@string/pc_mode" android:summary="@string/pc_mode_summary" android:defaultValue="false" android:icon="@drawable/ic_desktop" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/privacy">
-        <SwitchPreference
-            android:key="cookies_enabled"
-            android:title="@string/cookies_enabled"
-            android:summary="@string/cookies_summary"
-            android:defaultValue="true" />
-
-        <SwitchPreference
-            android:key="cache_enabled"
-            android:title="@string/cache_enabled"
-            android:summary="@string/cache_summary"
-            android:defaultValue="true" />
-
-        <SwitchPreference
-            android:key="history_enabled"
-            android:title="@string/history_enabled"
-            android:summary="@string/history_summary"
-            android:defaultValue="true" />
+        <SwitchPreference android:key="cookies_enabled" android:title="@string/cookies_enabled" android:summary="@string/cookies_summary" android:defaultValue="true" android:icon="@drawable/ic_cookie" />
+        <SwitchPreference android:key="cache_enabled" android:title="@string/cache_enabled" android:summary="@string/cache_summary" android:defaultValue="true" android:icon="@drawable/ic_cache" />
+        <SwitchPreference android:key="history_enabled" android:title="@string/history_enabled" android:summary="@string/history_summary" android:defaultValue="true" android:icon="@drawable/ic_history" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/media">
-        <SwitchPreference
-            android:key="media_autoplay_enabled"
-            android:title="@string/media_autoplay"
-            android:summary="@string/media_autoplay_summary"
-            android:defaultValue="false" />
+        <SwitchPreference android:key="media_autoplay_enabled" android:title="@string/media_autoplay" android:summary="@string/media_autoplay_summary" android:defaultValue="false" android:icon="@drawable/ic_play" />
     </PreferenceCategory>
 
 </PreferenceScreen>
