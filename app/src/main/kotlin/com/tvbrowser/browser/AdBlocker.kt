@@ -13,9 +13,7 @@ class AdBlocker(private val context: Context) {
     private val blockedDomains = mutableSetOf<String>()
     private val adPatterns = mutableListOf<Pattern>()
 
-    init {
-        loadBlocklists()
-    }
+    init { loadBlocklists() }
 
     private fun loadBlocklists() {
         CoroutineScope(Dispatchers.IO).launch {
@@ -26,81 +24,59 @@ class AdBlocker(private val context: Context) {
     }
 
     private fun addYouTubePatterns() {
-        val ytPatterns = listOf(
-            Pattern.compile(".*(google)?ads.*", Pattern.CASE_INSENSITIVE),
+        adPatterns.addAll(listOf(
+            Pattern.compile(".*(^|[./])googleads([./]|$).*", Pattern.CASE_INSENSITIVE),
             Pattern.compile(".*doubleclick.*", Pattern.CASE_INSENSITIVE),
             Pattern.compile(".*adservice.*", Pattern.CASE_INSENSITIVE),
             Pattern.compile(".*youtube.*ads.*", Pattern.CASE_INSENSITIVE),
             Pattern.compile(".*/get_video_info.*", Pattern.CASE_INSENSITIVE),
             Pattern.compile(".*pagead.*", Pattern.CASE_INSENSITIVE),
             Pattern.compile(".*googlesyndication.*", Pattern.CASE_INSENSITIVE),
-            Pattern.compile(".*adclick.*", Pattern.CASE_INSENSITIVE),
-            Pattern.compile(".*tracking.*", Pattern.CASE_INSENSITIVE)
-        )
-
-        adPatterns.addAll(ytPatterns)
+            Pattern.compile(".*adclick.*", Pattern.CASE_INSENSITIVE)
+        ))
     }
 
     private fun addGeneralAdPatterns() {
-        val generalPatterns = listOf(
-            Pattern.compile(".*/ads/.*", Pattern.CASE_INSENSITIVE),
-            Pattern.compile(".*banner.*", Pattern.CASE_INSENSITIVE),
-            Pattern.compile(".*/ad/.*", Pattern.CASE_INSENSITIVE),
+        adPatterns.addAll(listOf(
+            Pattern.compile(".*/ads(?:/|\\?).*", Pattern.CASE_INSENSITIVE),
+            Pattern.compile(".*/ad(?:/|\\?).*", Pattern.CASE_INSENSITIVE),
             Pattern.compile(".*advertisement.*", Pattern.CASE_INSENSITIVE),
-            Pattern.compile(".*advert.*", Pattern.CASE_INSENSITIVE)
-        )
-
-        adPatterns.addAll(generalPatterns)
+            Pattern.compile(".*googlesyndication.*", Pattern.CASE_INSENSITIVE)
+        ))
     }
 
     @JavascriptInterface
     fun shouldBlockUrl(url: String): Boolean {
         val domain = extractDomain(url)
-
-        if (blockedDomains.any { domain.contains(it) }) {
-            return true
-        }
-
+        if (blockedDomains.any { domain.contains(it) }) return true
         return adPatterns.any { it.matcher(url).matches() }
     }
 
     private fun extractDomain(url: String): String {
         return try {
             val start = url.indexOf("://") + 3
-            val end = url.indexOf("/", start).let {
-                if (it == -1) url.length else it
-            }
-
+            val end = url.indexOf("/", start).let { if (it == -1) url.length else it }
             url.substring(start, end)
-        } catch (e: Exception) {
-            url
-        }
+        } catch (_: Exception) { url }
     }
 
-    fun getBlockingScript(): String {
-        return """
-            (function() {
-                const selectors = [
-                    '[class*="ad"]',
-                    '[id*="ad"]',
-                    '[class*="banner"]',
-                    '[class*="advert"]',
-                    'iframe[src*="ads"]',
-                    'iframe[src*="doubleclick"]',
-                    'iframe[src*="googlesyndication"]',
-                    '.ad-container',
-                    '.ad-placeholder',
-                    '[data-ad-client]',
-                    '[data-ad-slot]'
-                ];
-
-                selectors.forEach(selector => {
-                    document.querySelectorAll(selector).forEach(el => {
-                        el.style.display = 'none';
-                        el.remove();
-                    });
+    fun getBlockingScript(): String = """
+        (function() {
+            const selectors = [
+                'iframe[src*="doubleclick"]',
+                'iframe[src*="googlesyndication"]',
+                'iframe[src*="googleads"]',
+                '[data-ad-client]',
+                '[data-ad-slot]',
+                '.ad-container',
+                '.ad-placeholder'
+            ];
+            selectors.forEach(selector => {
+                document.querySelectorAll(selector).forEach(el => {
+                    el.style.display = 'none';
+                    el.remove();
                 });
-            })();
-        """
-    }
+            });
+        })();
+    """
 }
