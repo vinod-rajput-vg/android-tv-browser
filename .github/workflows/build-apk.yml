@@ -30,17 +30,17 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Grant execute permission to gradlew
-        run: chmod +x ./gradlew
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 8.4
 
       - name: Build ${{ inputs.build_type }} APK
         run: |
           if [ "${{ inputs.build_type }}" = "release" ]; then
-            ./gradlew --version
-            ./gradlew assembleRelease
+            gradle assembleRelease
           else
-            ./gradlew --version
-            ./gradlew assembleDebug
+            gradle assembleDebug
           fi
 
       - name: Find APK
