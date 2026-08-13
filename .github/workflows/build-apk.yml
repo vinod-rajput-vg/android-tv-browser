@@ -47,19 +47,25 @@ jobs:
         id: apk
         shell: bash
         run: |
-          if [ "${{ inputs.build_type }}" = "debug" ]; then
-            APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          set -euo pipefail
+
+          APK_ROOT="app/build/outputs/apk"
+          echo "Searching for APK files under: $APK_ROOT"
+          find "$APK_ROOT" -type f -name '*.apk' -print 2>/dev/null || true
+
+          if [ "${{ inputs.build_type }}" = "release" ]; then
+            APK_PATH=$(find "$APK_ROOT" -type f -name '*.apk' -path '*/release/*' -print -quit 2>/dev/null || true)
           else
-            APK_PATH=$(find app/build/outputs/apk/release -maxdepth 1 -type f -name "*.apk" | head -n 1)
+            APK_PATH=$(find "$APK_ROOT" -type f -name '*.apk' -path '*/debug/*' -print -quit 2>/dev/null || true)
           fi
 
-          if [ -z "$APK_PATH" ] || [ ! -f "$APK_PATH" ]; then
-            echo "APK not found. Available files:"
-            find app/build/outputs -type f -maxdepth 5 -print 2>/dev/null || true
+          if [ -z "$APK_PATH" ]; then
+            echo "No ${{ inputs.build_type }} APK found. Build output:" 
+            find app/build/outputs -maxdepth 5 -type f -print 2>/dev/null || true
             exit 1
           fi
 
-          echo "Found APK: $APK_PATH"
+          echo "APK found: $APK_PATH"
           echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
           echo "apk_name=$(basename "$APK_PATH")" >> "$GITHUB_OUTPUT"
           ls -lh "$APK_PATH"
@@ -79,8 +85,7 @@ jobs:
           name: TV Browser Release v1.0.0-build.${{ github.run_number }}
           files: ${{ steps.apk.outputs.apk_path }}
           body: |
-            ## Android TV Browser - Release Build
-
+            ## 📦 Android TV Browser - Release Build
             Build #${{ github.run_number }}
 
             ### APK
