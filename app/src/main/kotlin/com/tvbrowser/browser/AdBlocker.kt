@@ -37,6 +37,7 @@ class AdBlocker(private val context: Context) {
             Pattern.compile(".*adclick.*", Pattern.CASE_INSENSITIVE),
             Pattern.compile(".*tracking.*", Pattern.CASE_INSENSITIVE)
         )
+
         adPatterns.addAll(ytPatterns)
     }
 
@@ -48,24 +49,28 @@ class AdBlocker(private val context: Context) {
             Pattern.compile(".*advertisement.*", Pattern.CASE_INSENSITIVE),
             Pattern.compile(".*advert.*", Pattern.CASE_INSENSITIVE)
         )
+
         adPatterns.addAll(generalPatterns)
     }
 
     @JavascriptInterface
     fun shouldBlockUrl(url: String): Boolean {
         val domain = extractDomain(url)
-        
+
         if (blockedDomains.any { domain.contains(it) }) {
             return true
         }
-        
+
         return adPatterns.any { it.matcher(url).matches() }
     }
 
     private fun extractDomain(url: String): String {
         return try {
             val start = url.indexOf("://") + 3
-            val end = url.indexOf("/", start).let { if (it == -1) url.length else it }
+            val end = url.indexOf("/", start).let {
+                if (it == -1) url.length else it
+            }
+
             url.substring(start, end)
         } catch (e: Exception) {
             url
@@ -88,7 +93,7 @@ class AdBlocker(private val context: Context) {
                     '[data-ad-client]',
                     '[data-ad-slot]'
                 ];
-                
+
                 selectors.forEach(selector => {
                     document.querySelectorAll(selector).forEach(el => {
                         el.style.display = 'none';
