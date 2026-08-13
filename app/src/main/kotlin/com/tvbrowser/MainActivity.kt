@@ -1,6 +1,8 @@
 package com.tvbrowser
 
 import android.Manifest
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
@@ -14,12 +16,9 @@ import android.widget.ImageButton
 import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.Toast
-import android.app.Activity
-import android.content.ActivityNotFoundException
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.tvbrowser.R
 import com.tvbrowser.browser.BrowserEngine
 import com.tvbrowser.settings.PreferencesManager
 
@@ -36,6 +35,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnVoice: ImageButton
     private lateinit var btnMenu: ImageButton
     private var pcModeAtLastSetup = false
+    private var textSizeAtLastSetup = 100
+    private var screenSizeAtLastSetup = 100
     private val voiceRequestCode = 7001
     private val audioPermissionCode = 7002
 
@@ -65,8 +66,14 @@ class MainActivity : AppCompatActivity() {
         browserEngine.configureWebView(webView)
         webView.webViewClient = browserEngine.createWebViewClient(progressBar) { url -> updateUrlBar(url) }
         webView.webChromeClient = browserEngine.createWebChromeClient(progressBar)
-        pcModeAtLastSetup = preferencesManager.isPcModeEnabled()
+        captureSettingsState()
         loadHomePage()
+    }
+
+    private fun captureSettingsState() {
+        pcModeAtLastSetup = preferencesManager.isPcModeEnabled()
+        textSizeAtLastSetup = preferencesManager.getTextSize()
+        screenSizeAtLastSetup = preferencesManager.getScreenSize()
     }
 
     private fun setupListeners() {
@@ -96,9 +103,7 @@ class MainActivity : AppCompatActivity() {
         webView.loadUrl(finalUrl)
     }
 
-    private fun loadHomePage() {
-        webView.loadUrl(preferencesManager.getHomePage())
-    }
+    private fun loadHomePage() = webView.loadUrl(preferencesManager.getHomePage())
 
     private fun updateUrlBar(url: String?) {
         if (url.isNullOrBlank()) return
@@ -118,8 +123,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.menu_bookmarks -> showBookmarks()
                 R.id.menu_add_bookmark -> addCurrentBookmark()
                 R.id.menu_pc_mode -> {
-                    val enabled = !preferencesManager.isPcModeEnabled()
-                    preferencesManager.setPcModeEnabled(enabled)
+                    preferencesManager.setPcModeEnabled(!preferencesManager.isPcModeEnabled())
                     reloadWithCurrentSettings()
                 }
                 R.id.menu_text_zoom_in -> changeTextZoom(10)
@@ -138,7 +142,7 @@ class MainActivity : AppCompatActivity() {
     private fun reloadWithCurrentSettings() {
         val currentUrl = webView.url ?: preferencesManager.getHomePage()
         browserEngine.configureWebView(webView)
-        pcModeAtLastSetup = preferencesManager.isPcModeEnabled()
+        captureSettingsState()
         webView.loadUrl(currentUrl)
     }
 
@@ -167,12 +171,12 @@ class MainActivity : AppCompatActivity() {
         val next = (webView.settings.textZoom + delta).coerceIn(50, 200)
         webView.settings.textZoom = next
         preferencesManager.setTextSize(next)
+        textSizeAtLastSetup = next
     }
 
     private fun copyCurrentUrl() {
         val url = webView.url ?: return
-        val clipboard = getSystemService(ClipboardManager::class.java)
-        clipboard.setPrimaryClip(ClipData.newPlainText("URL", url))
+        getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("URL", url))
         Toast.makeText(this, R.string.url_copied, Toast.LENGTH_SHORT).show()
     }
 
@@ -202,11 +206,8 @@ class MainActivity : AppCompatActivity() {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_search_prompt))
         }
-        try {
-            startActivityForResult(intent, voiceRequestCode)
-        } catch (_: ActivityNotFoundException) {
-            Toast.makeText(this, R.string.voice_search_unavailable, Toast.LENGTH_SHORT).show()
-        }
+        try { startActivityForResult(intent, voiceRequestCode) }
+        catch (_: ActivityNotFoundException) { Toast.makeText(this, R.string.voice_search_unavailable, Toast.LENGTH_SHORT).show() }
     }
 
     @Deprecated("Legacy TV-compatible activity result API")
@@ -221,9 +222,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun openSettings() {
-        startActivity(Intent(this, SettingsActivity::class.java))
-    }
+    private fun openSettings() = startActivity(Intent(this, SettingsActivity::class.java))
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -234,7 +233,10 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         webView.onResume()
         webView.resumeTimers()
-        if (preferencesManager.isPcModeEnabled() != pcModeAtLastSetup) reloadWithCurrentSettings()
+        val changed = preferencesManager.isPcModeEnabled() != pcModeAtLastSetup ||
+            preferencesManager.getTextSize() != textSizeAtLastSetup ||
+            preferencesManager.getScreenSize() != screenSizeAtLastSetup
+        if (changed) reloadWithCurrentSettings()
         updateUrlBar(webView.url)
     }
 
