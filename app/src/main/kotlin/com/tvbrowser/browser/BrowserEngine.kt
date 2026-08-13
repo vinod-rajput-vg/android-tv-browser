@@ -13,8 +13,8 @@ class BrowserEngine(private val context: Context, private val preferencesManager
     private val adBlocker = AdBlocker(context)
 
     fun configureWebView(webView: WebView) {
-        val settings = webView.settings.apply {
-            javaScriptEnabled = true
+        webView.settings.apply {
+            javaScriptEnabled = preferencesManager.isJavaScriptEnabled()
             domStorageEnabled = true
             databaseEnabled = true
             builtInZoomControls = true
@@ -25,9 +25,13 @@ class BrowserEngine(private val context: Context, private val preferencesManager
             allowFileAccess = true
             allowContentAccess = true
             userAgentString = getUserAgent()
-            cacheMode = WebSettings.LOAD_DEFAULT
+            cacheMode = if (preferencesManager.isCacheEnabled()) {
+                WebSettings.LOAD_DEFAULT
+            } else {
+                WebSettings.LOAD_NO_CACHE
+            }
             setSupportZoom(true)
-            mediaPlaybackRequiresUserGesture = preferencesManager.isMediaAutoPlay()
+            mediaPlaybackRequiresUserGesture = !preferencesManager.isMediaAutoPlay()
         }
 
         if (preferencesManager.isAdBlockEnabled()) {
@@ -73,6 +77,10 @@ class BrowserEngine(private val context: Context, private val preferencesManager
     }
 
     private fun getUserAgent(): String {
-        return "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 TV"
+        return if (preferencesManager.isPcModeEnabled()) {
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        } else {
+            "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 TV"
+        }
     }
 }
