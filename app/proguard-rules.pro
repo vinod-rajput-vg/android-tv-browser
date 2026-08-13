@@ -1,0 +1,5 @@
+-keep class com.tvbrowser.** { *; }
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+-dontwarn okhttp3.**
+-dontwarn com.google.gson.**

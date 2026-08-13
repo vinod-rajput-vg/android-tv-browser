@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TV Browser</string>
+    <string name="back">Back</string>
+    <string name="forward">Forward</string>
+    <string name="home">Home</string>
+    <string name="settings">Settings</string>
+    <string name="enter_url">Enter URL</string>
+
+    <!-- Ad Blocking -->
+    <string name="ad_blocking">Ad Blocking</string>
+    <string name="enable_ad_blocker">Enable Ad Blocker</string>
+    <string name="block_ads_summary">Block ads from websites</string>
+    <string name="enable_yt_blocker">YouTube Ad Blocker</string>
+    <string name="block_yt_ads_summary">Block ads on YouTube videos</string>
+    <string name="block_tracking">Block Tracking</string>
+    <string name="block_tracking_summary">Block tracking scripts and cookies</string>
+    <string name="block_scripts">Block Scripts</string>
+    <string name="block_scripts_summary">Disable JavaScript (may break some sites)</string>
+
+    <!-- Browser Settings -->
+    <string name="browser_settings">Browser Settings</string>
+    <string name="home_page">Home Page</string>
+    <string name="home_page_summary">Set default home page URL</string>
+    <string name="text_size">Text Size</string>
+    <string name="text_size_summary">Adjust text size percentage</string>
+    <string name="javascript_enabled">Enable JavaScript</string>
+    <string name="javascript_summary">Allow websites to run scripts</string>
+
+    <!-- Privacy -->
+    <string name="privacy">Privacy</string>
+    <string name="cookies_enabled">Enable Cookies</string>
+    <string name="cookies_summary">Allow websites to store cookies</string>
+    <string name="cache_enabled">Enable Cache</string>
+    <string name="cache_summary">Cache web pages for faster loading</string>
+    <string name="history_enabled">Enable History</string>
+    <string name="history_summary">Save browsing history</string>
+
+    <!-- Media -->
+    <string name="media">Media</string>
+    <string name="media_autoplay">Auto-play Media</string>
+    <string name="media_autoplay_summary">Auto-play videos when page loads</string>
+</resources>
