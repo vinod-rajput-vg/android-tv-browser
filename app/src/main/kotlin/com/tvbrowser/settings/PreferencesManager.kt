@@ -30,6 +30,9 @@ class PreferencesManager(private val context: Context) {
     fun isJavaScriptEnabled(): Boolean = prefs.getBoolean("javascript_enabled", true)
     fun setJavaScriptEnabled(enabled: Boolean) = prefs.edit().putBoolean("javascript_enabled", enabled).apply()
 
+    fun isPcModeEnabled(): Boolean = prefs.getBoolean("pc_mode_enabled", false)
+    fun setPcModeEnabled(enabled: Boolean) = prefs.edit().putBoolean("pc_mode_enabled", enabled).apply()
+
     // Privacy Settings
     fun isCookiesEnabled(): Boolean = prefs.getBoolean("cookies_enabled", true)
     fun setCookiesEnabled(enabled: Boolean) = prefs.edit().putBoolean("cookies_enabled", enabled).apply()
