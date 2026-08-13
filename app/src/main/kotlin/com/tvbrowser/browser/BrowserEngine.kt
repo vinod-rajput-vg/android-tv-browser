@@ -25,11 +25,7 @@ class BrowserEngine(private val context: Context, private val preferencesManager
             allowFileAccess = true
             allowContentAccess = true
             userAgentString = getUserAgent()
-            cacheMode = if (preferencesManager.isCacheEnabled()) {
-                WebSettings.LOAD_DEFAULT
-            } else {
-                WebSettings.LOAD_NO_CACHE
-            }
+            cacheMode = if (preferencesManager.isCacheEnabled()) WebSettings.LOAD_DEFAULT else WebSettings.LOAD_NO_CACHE
             setSupportZoom(true)
             mediaPlaybackRequiresUserGesture = !preferencesManager.isMediaAutoPlay()
         }
@@ -39,23 +35,28 @@ class BrowserEngine(private val context: Context, private val preferencesManager
         }
     }
 
-    fun createWebViewClient(progressBar: ProgressBar): WebViewClient {
+    fun createWebViewClient(
+        progressBar: ProgressBar,
+        onUrlChanged: (String?) -> Unit
+    ): WebViewClient {
         return object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                 progressBar.visibility = View.VISIBLE
                 progressBar.progress = 0
+                onUrlChanged(url)
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 progressBar.visibility = View.GONE
-                
+                onUrlChanged(url ?: view?.url)
+
                 if (preferencesManager.isAdBlockEnabled()) {
                     injectAdBlockingScripts(view)
                 }
             }
 
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                if (url != null && !url.startsWith("http")) {
+                if (url != null && !url.startsWith("http://") && !url.startsWith("https://")) {
                     return true
                 }
                 return false
