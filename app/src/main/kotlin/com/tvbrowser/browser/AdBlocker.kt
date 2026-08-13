@@ -2,7 +2,6 @@ package com.tvbrowser.browser
 
 import android.content.Context
 import android.webkit.JavascriptInterface
-import android.webkit.WebView
 import com.tvbrowser.utils.BlocklistManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,11 +19,8 @@ class AdBlocker(private val context: Context) {
 
     private fun loadBlocklists() {
         CoroutineScope(Dispatchers.IO).launch {
-            // YouTube ad patterns
             addYouTubePatterns()
-            // General ad patterns
             addGeneralAdPatterns()
-            // Load from user blocklists
             blockedDomains.addAll(blocklistManager.getBlockedDomains())
         }
     }
@@ -55,15 +51,14 @@ class AdBlocker(private val context: Context) {
         adPatterns.addAll(generalPatterns)
     }
 
+    @JavascriptInterface
     fun shouldBlockUrl(url: String): Boolean {
         val domain = extractDomain(url)
         
-        // Check against blocklist
         if (blockedDomains.any { domain.contains(it) }) {
             return true
         }
         
-        // Check against patterns
         return adPatterns.any { it.matcher(url).matches() }
     }
 
@@ -80,7 +75,6 @@ class AdBlocker(private val context: Context) {
     fun getBlockingScript(): String {
         return """
             (function() {
-                // Hide ad elements
                 const selectors = [
                     '[class*="ad"]',
                     '[id*="ad"]',
@@ -101,24 +95,7 @@ class AdBlocker(private val context: Context) {
                         el.remove();
                     });
                 });
-
-                // Block ad requests
-                if (window.XMLHttpRequest) {
-                    const originalOpen = XMLHttpRequest.prototype.open;
-                    XMLHttpRequest.prototype.open = function(method, url, ...args) {
-                        if (Android && Android.shouldBlockUrl && Android.shouldBlockUrl(url)) {
-                            console.log('Blocked ad request: ' + url);
-                            return;
-                        }
-                        return originalOpen.apply(this, [method, url, ...args]);
-                    };
-                }
             })();
         """
-    }
-
-    @JavascriptInterface
-    fun checkIfAdUrl(url: String): Boolean {
-        return shouldBlockUrl(url)
     }
 }
