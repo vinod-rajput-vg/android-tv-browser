@@ -23,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnForward: ImageButton
     private lateinit var btnSettings: ImageButton
     private lateinit var btnHome: ImageButton
+    private var pcModeAtLastSetup = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         browserEngine.configureWebView(webView)
         webView.webViewClient = browserEngine.createWebViewClient(progressBar)
         webView.webChromeClient = browserEngine.createWebChromeClient(progressBar)
+        pcModeAtLastSetup = preferencesManager.isPcModeEnabled()
         loadHomePage()
     }
 
@@ -90,6 +92,14 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         webView.onResume()
         webView.resumeTimers()
+
+        val pcModeEnabled = preferencesManager.isPcModeEnabled()
+        if (pcModeEnabled != pcModeAtLastSetup) {
+            val currentUrl = webView.url ?: preferencesManager.getHomePage()
+            browserEngine.configureWebView(webView)
+            pcModeAtLastSetup = pcModeEnabled
+            webView.loadUrl(currentUrl)
+        }
     }
 
     override fun onPause() {
